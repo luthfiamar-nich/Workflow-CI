@@ -35,14 +35,17 @@ jobs:
         python -m pip install --upgrade pip
         pip install mlflow==2.11.3 dagshub pandas numpy scikit-learn matplotlib seaborn
 
-    # 5. Run mlflow project
+    # 5. PERBAIKAN: Menghapus parameter 'readiness_check' yang menyebabkan eror
     - name: Run mlflow project
       env:
         MLFLOW_TRACKING_USERNAME: ${{ secrets.DAGSHUB_USERNAME }}
         MLFLOW_TRACKING_PASSWORD: ${{ secrets.DAGSHUB_TOKEN }}
       run: |
         cd MLProject
-        python -c "import dagshub; dagshub.init(repo_owner='${{ secrets.DAGSHUB_USERNAME }}', repo_name='credit-scoring-model', readiness_check=False)"
+        # Menggunakan inisialisasi standar DagsHub tanpa argumen tambahan yang sensitif terhadap versi
+        python -c "import dagshub; dagshub.init(repo_owner='${{ secrets.DAGSHUB_USERNAME }}', repo_name='credit-scoring-model')"
+        
+        # Mengeksekusi entry point utama menggunakan mlflow run
         mlflow run . -e main --env-manager=local
 
     # 6. Get latest MLflow run_id
