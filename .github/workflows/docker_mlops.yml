@@ -33,19 +33,16 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install mlflow dagshub pandas numpy scikit-learn matplotlib seaborn
+        pip install mlflow==2.11.3 dagshub pandas numpy scikit-learn matplotlib seaborn
 
-    # 5. MLflow Run
+    # 5. Run mlflow project
     - name: Run mlflow project
       env:
         MLFLOW_TRACKING_USERNAME: ${{ secrets.DAGSHUB_USERNAME }}
         MLFLOW_TRACKING_PASSWORD: ${{ secrets.DAGSHUB_TOKEN }}
       run: |
         cd MLProject
-        # Mengatur tracking URI ke Dagshub
         python -c "import dagshub; dagshub.init(repo_owner='${{ secrets.DAGSHUB_USERNAME }}', repo_name='credit-scoring-model', readiness_check=False)"
-        
-        # Mengeksekusi entry point utama menggunakan mlflow run
         mlflow run . -e main --env-manager=local
 
     # 6. Get latest MLflow run_id
@@ -63,15 +60,18 @@ jobs:
       run: |
         echo "Syncing backup storage..."
 
-    # 9. Build Docker Model 
+    # 9. Path mlruns
     - name: Build Docker Model
       run: |
-        cd MLProject
         MODEL_PATH=$(find mlruns/ -type d -name "model" | head -n 1)
+        
+        if [ -z "$MODEL_PATH" ]; then
+          MODEL_PATH=$(find MLProject/mlruns/ -type d -name "model" | head -n 1)
+        fi
+        
         echo "Menggunakan model lokal dari path: $MODEL_PATH"
         
-        # Perintah build-docker sukses milik Anda
-        mlflow models build-docker -m "$MODEL_PATH" -n "${{ secrets.DOCKERHUB_USERNAME }}/credit-scoring-model:latest" --enable-mlserver
+        mlflow models build-docker -m "$MODEL_PATH" -n "${{ secrets.DOCKERHUB_USERNAME }}/credit-scoring-model:latest"
 
     # 10. Log in to Docker Hub
     - name: Log in to Docker Hub
