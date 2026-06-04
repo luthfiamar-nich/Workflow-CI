@@ -1,7 +1,9 @@
-name: Credit Risk Model CI
+name: Credit_Scoring_MLOps
 
 conda_env: conda.yaml
 
 entry_points:
   main:
-    command: "python modelling.py"
+    parameters:
+      data_dir: {type: string, default: "dataset_preprocessing"}
+    command: "python modelling_tuning.py"
